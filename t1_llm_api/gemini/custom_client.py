@@ -16,6 +16,35 @@ class CustomGeminiAIClient(AIClient):
     and handle its Server-Sent Events (SSE) streaming format.
     """
 
+    def _to_gemini_contents(self, messages: list[Message]) -> list[dict]:
+        """
+        Convert Message objects to Gemini Content format.
+
+        Gemini uses a different role naming convention where AI messages use
+        the role "model" instead of "assistant".
+
+        Args:
+            messages (list[Message]): The conversation messages to convert.
+
+        Returns:
+            list[dict]: Messages in Gemini's Content format.
+        """
+        contents = []
+        for msg in messages:
+            role = msg.role
+            contents.append(
+                {
+                    "role": role,
+                    "parts": [
+                        {
+                            "text": msg.content
+                        }
+                    ]
+                }
+            )
+
+        return contents
+
     def response(self, messages: list[Message], **kwargs) -> Message:
         """
         Get a synchronous response using raw HTTP POST request.
@@ -36,15 +65,39 @@ class CustomGeminiAIClient(AIClient):
             Uses 'x-goog-api-key' header for authentication.
             Response candidates contain content parts that are concatenated.
         """
-        #TODO:
-        # https://ai.google.dev/gemini-api/docs/text-generation
-        # - Prepare headers with api key and content type
-        # - Add System prompt
-        # - Execute post request to AI API (use `requests`)
-        # - Parse response
-        # - Print response to console
-        # - Return ASSISTANT message
-        raise NotImplementedError
+        headers = {
+            'x-goog-api-key': self._api_key,
+            'Content-Type': 'application/json'
+        }
+
+        data = {
+            "system_instruction": {
+                "parts": [
+                    {"text": self._system_prompt}
+                ]
+            },
+            "contents": self._to_gemini_contents(messages),
+            "generationConfig": {
+                "maxOutputTokens": kwargs.get("max_tokens", 1024)
+            }
+        }
+
+        url = f"{self._endpoint}/{self._model_name}:generateContent"
+
+        response = requests.post(url, headers=headers, json=data)
+        if response.status_code != 200:
+            raise Exception(f"API request failed with error: {response.status_code} - {response.text}")
+
+        data = response.json()
+        candidates = data.get("candidates", [])
+        if not candidates:
+            raise ValueError("API response contains no candidates")
+
+        parts = data["candidates"][0].get("content", {}).get("parts", {})
+        text = "".join(part.get("text", "") for part in parts)
+        print(text)
+
+        return Message(role=Role.ASSISTANT, content=text)
 
     async def stream_response(self, messages: list[Message], **kwargs) -> Message:
         """
@@ -66,13 +119,49 @@ class CustomGeminiAIClient(AIClient):
             Each SSE chunk contains candidates with content parts.
             Each text chunk is printed to stdout as it arrives.
         """
-        #TODO:
-        # https://ai.google.dev/gemini-api/docs/text-generation
-        # - Prepare headers with api key and content type
-        # - Add System prompt
-        # - Execute post request to AI API (use `aiohttp`)
-        # - Handle stream with chunks
-        # - Parse response
-        # - Print chunks to console
-        # - Return ASSISTANT message
-        raise NotImplementedError
+        headers = {
+            'x-goog-api-key': self._api_key,
+            'Content-Type': 'application/json'
+        }
+
+        data = {
+            "system_instruction": {
+                "parts": [
+                    {"text": self._system_prompt}
+                ]
+            },
+            "contents": self._to_gemini_contents(messages),
+            "generationConfig": {
+                "maxOutputTokens": kwargs.get("max_tokens", 1024)
+            }
+        }
+
+        url = f"{self._endpoint}/{self._model_name}:streamGenerateContent?alt=sse"
+
+        chunks_list = []
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, headers=headers, json=data) as response:
+                if response.status != 200:
+                    raise Exception(f"API request failed with error: {response.status} - {await response.text()}")
+
+                async for line in response.content:
+                    line_str = line.decode("utf-8").strip()
+
+                    if line_str.startswith("data: "):
+                        data = line_str[len("data: "):]
+                        parse_data = json.loads(data)
+                        candidates = parse_data.get("candidates", [])
+
+                        if not candidates:
+                            raise ValueError("API response contains no candidates")
+
+                        parts = candidates[0].get("content", {}).get("parts", {})
+                        for part in parts:
+                            text_chunk = part.get("text", "")
+                            if text_chunk:
+                                print(text_chunk, end="")
+                                chunks_list.append(text_chunk)
+                print()
+
+            return Message(role=Role.ASSISTANT, content=''.join(chunks_list))

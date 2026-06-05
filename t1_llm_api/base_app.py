@@ -21,4 +21,20 @@ async def start(stream: bool, client: AIClient) -> None:
                       If False, use synchronous responses (complete response at once).
         client (AIClient): The AI client instance to use for generating responses.
     """
-    raise NotImplementedError
+    conversation = Conversation()
+
+    print('Type your message or "exit" to quit.')
+    while True:
+        user_input = input("You: ")
+        if user_input.lower() == "exit":
+            print("Exiting chat session.")
+            break
+
+        conversation.add_message(Message(role=Role.USER, content=user_input))
+
+        if stream:
+            ai_response = await client.stream_response(conversation.messages)
+        else:
+            ai_response = client.response(conversation.messages)
+
+        conversation.add_message(ai_response)
