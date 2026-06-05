@@ -8,6 +8,9 @@ All API keys are loaded from environment variables for security.
 """
 
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Default system prompt used across all AI services
 DEFAULT_SYSTEM_PROMPT = "You are an assistant who answers concisely and informatively."
