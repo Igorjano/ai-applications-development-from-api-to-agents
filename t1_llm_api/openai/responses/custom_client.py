@@ -35,15 +35,33 @@ class CustomOpenAIResponsesClient(BaseOpenAIClient):
             Uses the Responses API format with 'instructions' and 'input' parameters.
             The response is printed to stdout before being returned.
         """
-        #TODO:
-        # https://developers.openai.com/api/docs/guides/text?lang=curl
-        # - Prepare headers with authorization and content type
-        # - Prepare input messages
-        # - Execute post request to AI API (use `requests`)
-        # - Parse response
-        # - Print response to console
-        # - Return ASSISTANT message
-        raise NotImplementedError
+        headers = {
+            "Authorization": self.api_key,
+            "Content-Type": "application/json"
+        }
+
+        input_messages = [msg.to_dict() for msg in messages]
+
+        data = {
+            "model": self._model_name,
+            "instructions": self._system_prompt,
+            "input": input_messages,
+            "max_output_tokens": 1024
+        }
+
+        response = requests.post(self._endpoint, headers=headers, json=data)
+        if response.status_code != 200:
+            raise Exception(f"API request failed with error: {response.status_code} - {response.text}")
+
+        data = response.json()
+        output = data.get("output", [])
+        if not output:
+            raise ValueError("API response contains no output")
+
+        text = output[0].get("content", [])[0].get("text", "")
+        print(f"✨: {text}")
+
+        return Message(role=Role.ASSISTANT, content=text)
 
     async def stream_response(self, messages: list[Message], **kwargs) -> Message:
         """
@@ -64,13 +82,40 @@ class CustomOpenAIResponsesClient(BaseOpenAIClient):
             Listens for 'response.output_text.delta' events to build the response.
             Each line with "event: " specifies the event type, followed by "data: " with the payload.
         """
-        #TODO:
-        # https://developers.openai.com/api/docs/guides/text?lang=curl
-        # - Prepare headers with authorization and content type
-        # - Prepare input messages
-        # - Execute post request to AI API (use `aiohttp`)
-        # - Handle stream with events
-        # - Parse response
-        # - Print chunks to console
-        # - Return ASSISTANT message
-        raise NotImplementedError
+        headers = {
+            "Authorization": self.api_key,
+            "Content-Type": "application/json"
+        }
+
+        input_messages = [msg.to_dict() for msg in messages]
+
+        data = {
+            "model": self._model_name,
+            "instructions": self._system_prompt,
+            "input": input_messages,
+            "max_output_tokens": 1024,
+            "stream": True
+        }
+
+        chunks_list = []
+        print("✨: ", end="")
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(self._endpoint, headers=headers, json=data) as response:
+                if response.status != 200:
+                    raise Exception(f"API request failed with error: {response.status} - {await response.text()}")
+
+                async for line in response.content:
+                    line_str = line.decode("utf-8").strip()
+                    if line_str.startswith("data"):
+                        data = line_str[len("data: "):]
+                        parsed_data = json.loads(data)
+
+                        if parsed_data.get("type", "") == "response.output_text.delta":
+                            text_chunk = parsed_data.get("delta", "")
+                            if text_chunk:
+                                print(text_chunk, end="")
+                                chunks_list.append(text_chunk)
+            print()
+
+        return Message(role=Role.ASSISTANT, content="".join(chunks_list))

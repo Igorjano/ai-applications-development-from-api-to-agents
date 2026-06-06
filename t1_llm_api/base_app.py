@@ -25,7 +25,7 @@ async def start(stream: bool, client: AIClient) -> None:
 
     print('Type your message or "exit" to quit.')
     while True:
-        user_input = input("You: ")
+        user_input = input("⌨️: ")
         if user_input.lower() == "exit":
             print("Exiting chat session.")
             break
