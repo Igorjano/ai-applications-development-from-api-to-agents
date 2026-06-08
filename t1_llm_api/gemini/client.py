@@ -29,8 +29,6 @@ class GeminiAIClient(AIClient):
             system_prompt (str): The system instruction to guide the model's behavior.
         """
         super().__init__(endpoint, model_name, api_key, system_prompt)
-        self._model_name = model_name
-        self._system_instruction = system_prompt
         self._client = genai.Client(api_key=api_key)
 
     def _to_gemini_contents(self, messages: list[Message]) -> list[types.Content]:
@@ -75,7 +73,7 @@ class GeminiAIClient(AIClient):
         response = self._client.models.generate_content(
             model=self._model_name,
             config=types.GenerateContentConfig(
-                system_instruction=self._system_instruction,
+                system_instruction=self._system_prompt,
                 max_output_tokens=kwargs.get('max_tokens', 1024)),
             contents=self._to_gemini_contents(messages)
         )
@@ -107,7 +105,7 @@ class GeminiAIClient(AIClient):
         async for chunk in await self._client.aio.models.generate_content_stream(
                 model=self._model_name,
                 config=types.GenerateContentConfig(
-                    system_instruction=self._system_instruction,
+                    system_instruction=self._system_prompt,
                     max_output_tokens=kwargs.get('max_tokens', 1024)),
                 contents=self._to_gemini_contents(messages),
         ):

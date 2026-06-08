@@ -7,17 +7,19 @@ from commons.constants import ANTHROPIC_ENDPOINT, ANTHROPIC_API_KEY, DEFAULT_SYS
 
 anthropic_client = AnthropicAIClient(
     endpoint=ANTHROPIC_ENDPOINT,
-    model_name='claude-sonnet-4-5',
+    # model_name='claude-sonnet-4-5',
+    model_name='claude-haiku-4-5',
     api_key=ANTHROPIC_API_KEY,
     system_prompt=DEFAULT_SYSTEM_PROMPT,
 )
 anthropic_custom_client = CustomAnthropicAIClient(
     endpoint=ANTHROPIC_ENDPOINT,
-    model_name='claude-sonnet-4-5',
+    # model_name='claude-sonnet-4-5',
+    model_name='claude-haiku-4-5',
     api_key=ANTHROPIC_API_KEY,
     system_prompt=DEFAULT_SYSTEM_PROMPT,
 )
 
 asyncio.run(
-    start(True, anthropic_client)
+    start(True, anthropic_custom_client)
 )

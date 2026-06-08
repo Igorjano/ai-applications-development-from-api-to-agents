@@ -1,5 +1,4 @@
 from openai import OpenAI, AsyncOpenAI
-from sqlalchemy import false
 
 from commons.models.message import Message
 from commons.models.role import Role
@@ -31,9 +30,6 @@ class OpenAIClient(BaseOpenAIClient):
             api_key (str): The OpenAI API key for authentication.
         """
         super().__init__(endpoint, model_name, system_prompt, api_key)
-        self._model_name = model_name
-        self._system_prompt = system_prompt
-
         self._client = OpenAI(api_key=api_key)
         self._async_client = AsyncOpenAI(api_key=api_key)
 
