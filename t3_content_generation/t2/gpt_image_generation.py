@@ -25,12 +25,23 @@ from t3_content_generation._openai_client import OpenAIClientT3
 #   ]
 # }
 
-#TODO:
-# You need to create some images with `gpt-image-2` model:
-#   - Generate an image with 'Smiling catdog'
-#   - Decode and save it locally
-# ---
-# Hints:
-#   - Use OpenAIClientT3 to connect to OpenAI API
-#   - Use /v1/images/generations endpoint
-#   - The image will be returned in base64 format
+def main():
+    endpoint = OPENAI_HOST + '/v1/images/generations'
+    client = OpenAIClientT3(endpoint=endpoint)
+    output_image_path = 'smiling_catdog.png'
+
+    response = client.call(
+        model='gpt-image-2',
+        prompt='Smiling catdog',
+    )
+
+    image_base64 = response.get('data', [])[0].get('b64_json', '')
+    if image_base64:
+        image_bytes = base64.b64decode(image_base64)
+
+        with open(output_image_path, 'wb') as image_file:
+            image_file.write(image_bytes)
+
+
+if __name__=='__main__':
+    main()

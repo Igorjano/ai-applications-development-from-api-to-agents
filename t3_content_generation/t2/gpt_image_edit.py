@@ -24,13 +24,36 @@ from commons.constants import OPENAI_API_KEY, OPENAI_HOST
 #   ]
 # }
 
-#TODO:
-# You need to edit an existing image with `gpt-image-2` model:
-#   - Take a local image (e.g. 'logo.png') and a prompt describing the edit
-#   - Send it to the OpenAI images edit API
-#   - Decode the returned base64 image and save it locally
-# ---
-# Hints:
-#   - Use /v1/images/edits endpoint
-#   - The request must be 'multipart/form-data' (NOT json) — pass the image as a file and the prompt/model as form fields
-#   - The edited image will be returned in base64 format
+def main():
+    image_path = 'logo.png'
+    output_image_path = 'magic_logo.png'
+
+    with open(image_path, "rb") as image_file:
+        url = OPENAI_HOST + '/v1/images/edits'
+
+        headers = {
+            'Authorization': 'Bearer ' + OPENAI_API_KEY,
+        }
+
+        data = {
+            'model': 'gpt-image-2',
+            'prompt': 'Add some "magic" to the logo — bright sparkles and a little glow with shooting stars',
+        }
+
+        files = {'image': (image_path, image_file, 'image/png')}
+
+        response = requests.post(url, headers=headers, data=data, files=files)
+
+    if response.status_code != 200:
+        raise Exception(f"API request failed with error: {response.status_code} - {response.content()}")
+
+    image_base64 = response.json().get('data', [])[0].get('b64_json', '')
+    if image_base64:
+        image_bytes = base64.b64decode(image_base64)
+
+        with open(output_image_path, 'wb') as image_file:
+            image_file.write(image_bytes)
+
+
+if __name__ == '__main__':
+    main()
