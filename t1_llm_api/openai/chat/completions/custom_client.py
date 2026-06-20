@@ -61,6 +61,7 @@ class CustomOpenAIClient(BaseOpenAIClient):
             raise ValueError("API response contains no choices")
 
         content = choices[0].get("message", {}).get("content", "")
+        print(content)
 
         return Message(role=Role.ASSISTANT, content=content)
 

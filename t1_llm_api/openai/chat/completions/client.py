@@ -57,6 +57,7 @@ class OpenAIClient(BaseOpenAIClient):
         )
 
         content = completion.choices[0].message.content
+        print(content)
 
         return Message(role=Role.ASSISTANT, content=content)
 
