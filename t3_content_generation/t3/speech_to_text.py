@@ -34,4 +34,4 @@ class OpenAIClient:
 
 
 client = OpenAIClient(OPENAI_API_KEY, OPENAI_HOST + '/v1/audio/transcriptions')
-client.call("audio_sample.mp3", model="whisper-1")
+client.call("audio_sample.mp3", model="gpt-4o-transcribe")
