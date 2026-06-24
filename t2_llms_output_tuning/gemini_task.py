@@ -38,6 +38,14 @@ run(
     client=GeminiAIClient('gemini-3-flash-preview'),
     print_request=True, # Switch to False if you do not want to see the request in console
     print_only_content=False, # Switch to True if you want to see only content from response
-
+    generationConfig={
+        "temperature": 2.0,
+        # "topP": 0.95,
+        # "topK": 1,
+        "maxOutputTokens": 1000,
+        # "responseMimeType": "application/json",
+        # "responseSchema": {"type": "array", "items": {"type": "object", "properties": {"name": {"type": "string"}, "year": {"type": "integer"}}}},
+        # "thinkingConfig": {"thinkMode": "THINKING_MODE_ENABLED", "thinkBudget": 5000}
+    }
 
 )

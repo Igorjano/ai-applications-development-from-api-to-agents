@@ -43,5 +43,11 @@ run(
     client=OpenAIResponsesClient('gpt-5.2'),
     print_request=True, # Switch to False if you do not want to see the request in console
     print_only_content=False, # Switch to True if you want to see only content from response
-
+    # temperature=1.0,
+    # top_p=0.1,
+    # max_output_tokens=2048,
+    text={"format": {"type": "json_schema", "name": "languages", "strict": True, "schema": {"type": "object", "properties": {"languages": {"type": "array", "items": {"type": "object", "properties": {"name": {"type": "string"}, "year": {"type": "integer"}}, "required": ["name", "year"], "additionalProperties": False}}}, "required": ["languages"], "additionalProperties": False}}}
+    # truncation="auto",
+    # metadata={"project": "demo", "user": "student-1"},
+    # reasoning={"effort": "high"}
 )

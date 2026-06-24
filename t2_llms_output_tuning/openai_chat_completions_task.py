@@ -59,6 +59,14 @@ run(
     client=OpenAIChatCompletionsClient(model_name='gpt-5.2'),
     print_request=True, # Switch to False if you do not want to see the request in console
     print_only_content=False, # Switch to True if you want to see only content from response
-
-
+    # n=3,
+    temperature=2.0,
+    # top_p=0.9,
+    max_completion_tokens=150,
+    # stop=["5"],
+    # response_format={"type": "json_schema", "json_schema": {"name": "languages", "strict": True, "schema": {"type": "object", "properties": {"languages": {"type": "array", "items": {"type": "object", "properties": {"name": {"type": "string"}, "year": {"type": "integer"}}, "required": ["name", "year"], "additionalProperties": False}}}, "required": ["languages"], "additionalProperties": False}}},
+    # presence_penalty=1.5,
+    # frequency_penalty=1.5,
+    # seed=42,
+    # reasoning_effort="high"
 )

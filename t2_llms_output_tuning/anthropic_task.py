@@ -33,5 +33,10 @@ run(
     client=AnthropicAIClient('claude-sonnet-4-5'),
     print_request=True, # Switch to False if you do not want to see the request in console
     print_only_content=False, # Switch to True if you want to see only content from response
-
+    # temperature=1.0,
+    top_p=0.5,
+    # top_k=40,
+    stop_sequences=["10"],
+    # output_config={"format":{"type": "json_schema", "schema": {"type": "object", "additionalProperties": False, "properties": {"languages": {"type": "array", "items": {"type": "object", "additionalProperties": False, "properties": {"name": {"type": "string"}, "year": {"type": "integer"}},"required": ["name", "year"]}}}}}},
+    # thinking={"type": "enabled", "budget_tokens": 5000}
 )
