@@ -28,7 +28,6 @@ class OpenAIClient:
             'Content-Type': 'application/json'
         }
 
-        print(json.dumps(kwargs, indent=2))
         response = requests.post(
                 url=self._endpoint,
                 headers=headers,
@@ -39,7 +38,6 @@ class OpenAIClient:
             raise Exception(f"API request failed with error: {response.status_code} - {response.content}")
 
         data = response.json()
-        print(json.dumps(data, indent=2))
 
         choices = data.get("choices", [])
         if choices:
