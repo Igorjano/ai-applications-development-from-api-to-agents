@@ -6,33 +6,56 @@ from t5_rag_advanced.chat.chat_completion_client import ChatCompletionClient
 from t5_rag_advanced.embeddings.embeddings_client import EmbeddingsClient
 from t5_rag_advanced.embeddings.text_processor import TextProcessor, SearchMode
 
-#TODO:
-# Create system prompt with info that it is RAG powered assistant.
-# Explain user message structure (firstly will be provided RAG context and the user question).
-# Provide instructions that LLM should use RAG Context when answer on User Question, will restrict LLM to answer
-# questions that are not related microwave usage, not related to context or out of history scope
+
 SYSTEM_PROMPT = """
+You are RAG powered assistant to answer questions how to use Microwave Oven.
+
+## Structure of User message:
+`RAG CONTEXT` - Retrieved documents relevant to the query.
+`USER QUESTION` - The user's actual question.
+
+## Instructions:
+- Use information from `RAG CONTEXT` as context when answering the `USER QUESTION`.
+- Cite specific sources when using information from the context.
+- Answer ONLY based on conversation history and RAG context.
+- If no relevant information exists in `RAG CONTEXT` or conversation history, state that you cannot answer the question.
 """
 
-#TODO:
-# Provide structured system prompt, with RAG Context and User Question sections.
 USER_PROMPT = """
+## RAG CONTEXT:
+{context}
+
+## USER QUESTION"
+{question}
 """
-
-#TODO:
-# - create embeddings client with 'text-embedding-3-small' model, OPENAI_EMBEDDINGS_ENDPOINT endpoint and OPENAI_API_KEY
-# - create chat completion client with 'gpt-5.2' model, OPENAI_CHAT_COMPLETIONS_ENDPOINT endpoint and OPENAI_API_KEY
-# - create text processor, DB config: {'host': 'localhost','port': 5433,'database': 'vectordb','user': 'postgres','password': 'postgres'}
-# ---
-# Create method that will run console chat with such steps:
-# - get user input from console
-# - retrieve context
-# - perform augmentation
-# - perform generation
-# - it should run in `while` loop (since it is console chat)
+embedding_client = EmbeddingsClient(endpoint=OPENAI_EMBEDDINGS_ENDPOINT, model_name='text-embedding-3-small', api_key=OPENAI_API_KEY)
+chat_completion_client = ChatCompletionClient(endpoint=OPENAI_CHAT_COMPLETIONS_ENDPOINT, model_name='gpt-5.2', api_key=OPENAI_API_KEY)
+processor = TextProcessor(embeddings_client=embedding_client, db_config={'host': 'localhost','port': 5433,'database': 'vectordb','user': 'postgres','password': 'postgres'})
 
 
+def main():
+    print('Creating vectors table with embeddings ...')
+    processor.process_text_file(file_name='embeddings/microwave_manual.txt', truncate_table=True)
 
-# TODO:
-#  PAY ATTENTION THAT YOU NEED TO RUN Postgres DB ON THE 5433 WITH PGVECTOR EXTENSION!
-#  RUN docker-compose.yml
+    conversation = Conversation()
+    conversation.add_message(Message(Role.SYSTEM, content=SYSTEM_PROMPT))
+
+    print('🤖 RAG-powered assistant is at your service. Ask your questions or type "exit" to quit.')
+    while True:
+        user_input = input("⌨️: ")
+        if user_input.lower() == "exit":
+            print("Exiting chat session.")
+            break
+
+        context = processor.search(search_mode=SearchMode.COSINE_DISTANCE, query=user_input)
+        augmented_prompt = USER_PROMPT.format(question=user_input, context=context)
+
+        conversation.add_message(Message(role=Role.USER, content=augmented_prompt))
+
+        completion = chat_completion_client.get_completion(conversation.messages)
+        print(f'✨: {completion.content}')
+
+        conversation.add_message(completion)
+
+
+main()
