@@ -104,7 +104,7 @@ async def generate_response(system_prompt: str, user_message: str) -> str:
         temperature=0
     )
 
-    total_tokens = response.usage.total_tokens if response.usage or 0
+    total_tokens = response.usage.total_tokens if response.usage else 0
     token_tracker.add_tokens(total_tokens)
 
     content = response.choices[0].message.content
